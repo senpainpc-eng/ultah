@@ -1,0 +1,53 @@
+/* Efek Kaca (Glassmorphism) */
+.glass-panel {
+    background: rgba(255, 248, 240, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Scrollbar Custom untuk Surat (Kecil & Rapih) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 248, 240, 0.5);
+    border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #A084C6;
+    border-radius: 4px;
+}
+
+/* Animasi Api Lilin Goyang */
+.flame {
+    width: 14px;
+    height: 24px;
+    background: radial-gradient(ellipse at bottom, #fef0a5 10%, #ffa500 40%, #ff4500 80%, transparent);
+    border-radius: 50% 50% 20% 20%;
+    box-shadow: 0 0 15px #ffa500, 0 0 30px #ff4500;
+    animation: flicker 0.1s infinite alternate;
+    margin-bottom: 2px;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+@keyframes flicker {
+    0% { transform: scale(1) rotate(-1deg); opacity: 0.9; }
+    50% { transform: scale(1.1) rotate(1deg); opacity: 1; }
+    100% { transform: scale(0.9) rotate(0deg); opacity: 0.8; }
+}
+
+/* Saat ditiup, lilin hilang */
+.flame.extinguished {
+    opacity: 0;
+    transform: scale(0) translateY(-20px);
+}
+
+/* Animasi Buka Amplop & Kertas Naik */
+.open-flap {
+    transform: rotateX(180deg);
+}
+
+.open-paper {
+    height: 480px !important;
+    transform: translateY(-200px) !important; /* Kertas naik dari dalam amplop */
+}
