@@ -71,8 +71,8 @@ dobInput.addEventListener('input', function (e) {
 
 loginBtn.addEventListener('click', () => {
     const val = dobInput.value.replace(/\D/g, '');
-    // Kunci sandinya adalah 06122026
-    if (val === '06122026') {
+    // Kunci sandinya adalah 06122007 (6 Desember 2007)
+    if (val === '06122007') {
         errorMsg.classList.add('hidden');
         proceedToStep3();
     } else {
@@ -227,6 +227,9 @@ envelopeContainer.addEventListener('click', () => {
     heartSeal.style.opacity = '0';
     envelopeFlap.classList.add('open-flap');
     clickHint.classList.add('hidden');
+    
+    // FIX: Menggeser amplop ke bawah agar ada ruang untuk kertas surat yang naik
+    document.getElementById('letterArea').style.marginTop = '300px';
     
     setTimeout(() => {
         paper.classList.add('open-paper');
