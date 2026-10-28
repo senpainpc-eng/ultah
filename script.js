@@ -58,7 +58,7 @@ const errorMsg = document.getElementById('errorMsg');
 
 // Auto format angka menjadi DD / MM / YYYY saat diketik
 dobInput.addEventListener('input', function (e) {
-    let value = e.target.value.replace(/\D/g, ''); // Hapus semua kecuali angka
+    let value = e.target.value.replace(/\D/g, ''); 
     if (value.length > 8) value = value.slice(0, 8);
     
     let formatted = '';
@@ -70,13 +70,15 @@ dobInput.addEventListener('input', function (e) {
 });
 
 loginBtn.addEventListener('click', () => {
-    const val = dobInput.value.replace(/\D/g, '');
-    // Kunci sandinya adalah 06122007 (6 Desember 2007)
+    // Memastikan HANYA angka yang diambil
+    const val = dobInput.value.replace(/[^0-9]/g, '');
+    
     if (val === '06122007') {
         errorMsg.classList.add('hidden');
         proceedToStep3();
     } else {
         errorMsg.classList.remove('hidden');
+        console.log("Angka yang terbaca sistem: '" + val + "'");
     }
 });
 
@@ -106,7 +108,7 @@ const letterArea = document.getElementById('letterArea');
 const micArea = document.getElementById('micArea');
 
 micBtn.addEventListener('click', async () => {
-    await Tone.start(); // Wajib untuk memulai audio di browser modern
+    await Tone.start(); 
     setupAmbientMusic();
     setupHappyBirthdayMusic();
     
@@ -127,7 +129,13 @@ micBtn.addEventListener('click', async () => {
     }
 });
 
-// Suara kotak musik lembut sebelum ditiup
+// Fitur Cadangan: Bisa klik api lilin untuk mematikan kalau mic tidak merespon
+flames.forEach(f => {
+    f.addEventListener('click', () => {
+        if (!isBlowing) blowOutCandles();
+    });
+});
+
 function setupAmbientMusic() {
     ambientSynth = new Tone.PolySynth(Tone.Synth).toDestination();
     ambientSynth.volume.value = -15;
@@ -145,13 +153,12 @@ function stopAmbientMusic() {
     if (ambientSynth) ambientSynth.dispose();
 }
 
-// Suara otomatis saat lilin padam
 function setupHappyBirthdayMusic() {
     happyBirthdaySynth = new Tone.Synth({
         oscillator: { type: "sine" },
         envelope: { attack: 0.1, decay: 0.2, sustain: 0.5, release: 1 }
     }).toDestination();
-    happyBirthdaySynth.volume.value = -5; // Volume lebih besar
+    happyBirthdaySynth.volume.value = -5;
 }
 
 function playHappyBirthday() {
@@ -176,32 +183,34 @@ function detectBlow() {
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteFrequencyData(dataArray);
     
-    let sum = 0;
-    for(let i = 0; i < bufferLength; i++) sum += dataArray[i];
-    const average = sum / bufferLength;
+    // Pakai nilai maksimal (puncak) agar lebih sensitif terhadap hentakan suara
+    let maxVolume = Math.max(...dataArray);
     
-    // Jika tiupan melebihi batas desibel, lilin padam
-    if (average > 50) blowOutCandles();
-    else requestAnimationFrame(detectBlow);
+    // Batas 40 sangat sensitif, tiupan pelan saja cukup
+    if (maxVolume > 40) { 
+        blowOutCandles();
+    } else {
+        requestAnimationFrame(detectBlow);
+    }
 }
 
 function blowOutCandles() {
     isBlowing = true;
-    micStream.getTracks().forEach(track => track.stop()); // Matikan Mic
+    if (micStream) {
+        micStream.getTracks().forEach(track => track.stop()); 
+    }
     
     flames.forEach(f => f.classList.add('extinguished'));
     stopAmbientMusic();
     micArea.classList.add('hidden');
     
-    // Ledakan Confetti
     confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 }, colors: ['#C4B5D8', '#A084C6', '#C6A76B', '#FFF8F0'] });
     
-    // Munculkan Teks, Lagu otomatis, dan Amplop
     setTimeout(() => {
         surpriseText.classList.remove('hidden');
         setTimeout(() => surpriseText.classList.remove('opacity-0', 'scale-50'), 100);
         
-        playHappyBirthday(); // MAIN OTOMATIS!
+        playHappyBirthday(); 
         
         setTimeout(() => {
             letterArea.classList.remove('hidden');
@@ -211,7 +220,7 @@ function blowOutCandles() {
 }
 
 // ===============================
-// STEP 4: ENVELOPE (Buka Surat)
+// STEP 4: ENVELOPE (Buka & Tutup Surat)
 // ===============================
 const envelopeContainer = document.getElementById('envelopeContainer');
 const envelopeFlap = document.getElementById('envelopeFlap');
@@ -220,18 +229,50 @@ const heartSeal = document.getElementById('heartSeal');
 const clickHint = document.getElementById('clickHint');
 let isEnvelopeOpen = false;
 
-envelopeContainer.addEventListener('click', () => {
-    if (isEnvelopeOpen) return;
-    isEnvelopeOpen = true;
-    
-    heartSeal.style.opacity = '0';
-    envelopeFlap.classList.add('open-flap');
-    clickHint.classList.add('hidden');
-    
-    // FIX: Menggeser amplop ke bawah agar ada ruang untuk kertas surat yang naik
-    document.getElementById('letterArea').style.marginTop = '300px';
-    
-    setTimeout(() => {
-        paper.classList.add('open-paper');
-    }, 500); // Tunggu amplop terbuka 0.5 detik baru kertas naik dan bisa discroll
+function toggleEnvelope(e) {
+    if (e) e.stopPropagation();
+
+    if (!isEnvelopeOpen) {
+        // PROSES BUKA SURAT
+        isEnvelopeOpen = true;
+        
+        heartSeal.style.opacity = '0';
+        envelopeFlap.classList.add('open-flap');
+        clickHint.classList.add('hidden');
+        
+        document.getElementById('letterArea').style.marginTop = '300px';
+        
+        setTimeout(() => {
+            paper.classList.add('open-paper');
+        }, 500); 
+
+    } else {
+        // PROSES TUTUP SURAT
+        isEnvelopeOpen = false;
+        
+        // 1. Kertas turun duluan
+        paper.classList.remove('open-paper');
+        
+        // 2. Tunggu kertas selesai turun (1 detik), baru tutup flap & kembalikan posisi
+        setTimeout(() => {
+            envelopeFlap.classList.remove('open-flap');
+            document.getElementById('letterArea').style.marginTop = '0px';
+            
+            // 3. Munculkan segel hati dan teks petunjuk lagi
+            setTimeout(() => {
+                heartSeal.style.opacity = '1';
+                clickHint.classList.remove('hidden');
+                clickHint.innerText = "Klik amplop untuk membuka surat lagi";
+            }, 500);
+        }, 1000); 
+    }
+}
+
+envelopeContainer.addEventListener('click', toggleEnvelope);
+
+paper.addEventListener('click', (e) => {
+    // Memastikan kita tidak menutup surat kalau cuma mau scroll teks
+    if (e.target.id === 'paper') {
+        toggleEnvelope(e);
+    }
 });
