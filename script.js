@@ -73,6 +73,7 @@ loginBtn.addEventListener('click', () => {
     // Memastikan HANYA angka yang diambil
     const val = dobInput.value.replace(/[^0-9]/g, '');
     
+    // Kunci sandinya: 06122007
     if (val === '06122007') {
         errorMsg.classList.add('hidden');
         proceedToStep3();
@@ -129,7 +130,7 @@ micBtn.addEventListener('click', async () => {
     }
 });
 
-// Fitur Cadangan: Bisa klik api lilin untuk mematikan kalau mic tidak merespon
+// Fitur Cadangan (JALUR NINJA): Bisa klik api lilin untuk mematikan kalau mic tidak merespon
 flames.forEach(f => {
     f.addEventListener('click', () => {
         if (!isBlowing) blowOutCandles();
@@ -177,17 +178,25 @@ function playHappyBirthday() {
     });
 }
 
+// SENSOR SUPER SENSITIF
 function detectBlow() {
     if (isBlowing) return;
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteFrequencyData(dataArray);
     
-    // Pakai nilai maksimal (puncak) agar lebih sensitif terhadap hentakan suara
-    let maxVolume = Math.max(...dataArray);
+    let sum = 0;
+    let maxVolume = 0;
     
-    // Batas 40 sangat sensitif, tiupan pelan saja cukup
-    if (maxVolume > 40) { 
+    for(let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i];
+        if (dataArray[i] > maxVolume) maxVolume = dataArray[i];
+    }
+    
+    let average = sum / bufferLength;
+    
+    // Sangat sensitif: Cek rata-rata (average > 10) atau suara hentakan (maxVolume > 20)
+    if (average > 10 || maxVolume > 20) { 
         blowOutCandles();
     } else {
         requestAnimationFrame(detectBlow);
