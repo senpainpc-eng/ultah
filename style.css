@@ -47,7 +47,8 @@
     transform: rotateX(180deg);
 }
 
+/* FIX: Kertas tidak naik terlalu tinggi agar tidak menabrak teks ucapan */
 .open-paper {
-    height: 480px !important;
-    transform: translateY(-200px) !important; /* Kertas naik dari dalam amplop */
+    height: 420px !important;
+    transform: translateY(-80px) !important; 
 }
